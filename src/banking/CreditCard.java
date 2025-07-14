@@ -11,7 +11,7 @@ public class CreditCard {
         balance = 0;
     }
 
-    public String generateCardNumber() {
+    public String generateCardNumberWithoutChecksum() {
         String MII = "4";
         String BIN = MII + "00000";
 
@@ -20,9 +20,35 @@ public class CreditCard {
             int num = (int) (Math.random() * 10);
             sb.append(num);
         }
+        return BIN + sb;
+    }
 
-        String checksum = String.valueOf((int) (Math.random() * 10));
-        return BIN + sb + checksum;
+    public String generateChecksumNumberUsingLuhnAlgorithm(String cardNumberWithoutChecksum) {
+        int sum = 0;
+
+        for (int i = 1; i <= cardNumberWithoutChecksum.length(); i++) {
+            int number = Integer.parseInt(String.valueOf(cardNumberWithoutChecksum.charAt(i - 1)));
+            int result = number;
+            if (i % 2 != 0) {
+                result = number * 2;
+                if (result > 9) {
+                    result -= 9;
+                }
+            }
+            sum += result;
+        }
+        int remainder = sum % 10;
+        int checksum = 10 - remainder;
+        if (checksum != 10) {
+            return String.valueOf(checksum);
+        }
+        return "0";
+    }
+
+    public String generateCardNumber() {
+        String cardNumberWithoutChecksum = generateCardNumberWithoutChecksum();
+        String checksumNumber = generateChecksumNumberUsingLuhnAlgorithm(cardNumberWithoutChecksum);
+        return cardNumberWithoutChecksum + checksumNumber;
     }
 
     public String generatePinCode() {
