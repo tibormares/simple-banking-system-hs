@@ -11,7 +11,13 @@ public class CreditCard {
         balance = 0;
     }
 
-    public String generateCardNumberWithoutChecksum() {
+    public CreditCard(String cardNumber, String pinCode, int balance) {
+        this.cardNumber = cardNumber;
+        this.pinCode = pinCode;
+        this.balance = balance;
+    }
+
+    private String generateCardNumberWithoutChecksum() {
         String MII = "4";
         String BIN = MII + "00000";
 
@@ -23,7 +29,7 @@ public class CreditCard {
         return BIN + sb;
     }
 
-    public String generateChecksumNumberUsingLuhnAlgorithm(String cardNumberWithoutChecksum) {
+    private String generateChecksumNumberUsingLuhnAlgorithm(String cardNumberWithoutChecksum) {
         int sum = 0;
 
         for (int i = 1; i <= cardNumberWithoutChecksum.length(); i++) {
@@ -45,13 +51,13 @@ public class CreditCard {
         return "0";
     }
 
-    public String generateCardNumber() {
+    private String generateCardNumber() {
         String cardNumberWithoutChecksum = generateCardNumberWithoutChecksum();
         String checksumNumber = generateChecksumNumberUsingLuhnAlgorithm(cardNumberWithoutChecksum);
         return cardNumberWithoutChecksum + checksumNumber;
     }
 
-    public String generatePinCode() {
+    private String generatePinCode() {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 4; i++) {
             int num = (int) (Math.random() * 10);

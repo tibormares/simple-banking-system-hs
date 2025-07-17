@@ -1,15 +1,24 @@
 package banking;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
-    private static final List<CreditCard> cards = new ArrayList<>();
+    private static Database database;
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        menu(scanner);
+        try (Scanner scanner = new Scanner(System.in)) {
+            if (args.length < 2 || !args[0].equals("-fileName") || args[1].isEmpty()) {
+                System.out.println("""
+                    Invalid arguments.
+                    -fileName filename""");
+                return;
+            }
+            database = new Database(args[1]);
+            menu(scanner);
+        } catch (SQLException e) {
+            System.out.println("Database error: " + e.getMessage());
+        }
     }
 
     public static void menu(Scanner scanner) {
@@ -48,7 +57,7 @@ public class Main {
         }
     }
 
-    public static void userMenu(Scanner scanner, CreditCard card) {
+    public static void userMenu(Scanner scanner, CreditCard creditCard) {
         while (true) {
             System.out.println("""
                     1. Balance
@@ -57,7 +66,7 @@ public class Main {
             String input = scanner.next();
             System.out.println();
             switch (input) {
-                case "1" -> System.out.println("Balance: " + card.getBalance());
+                case "1" -> System.out.println("Balance: " + creditCard.getBalance());
                 case "2" -> {
                     System.out.println("You have successfully logged out!");
                     System.out.println();
@@ -73,20 +82,12 @@ public class Main {
     }
 
     public static CreditCard verifyLogin(String cardNumber, String pinCode) {
-        CreditCard creditCard = null;
-        for (CreditCard card : cards) {
-            if (card.getCardNumber().equals(cardNumber)) {
-                if (card.getPinCode().equals(pinCode)) {
-                    creditCard = card;
-                }
-            }
-        }
-        return creditCard;
+        return database.verifyLogin(cardNumber, pinCode);
     }
 
     public static void createCreditCard() {
         CreditCard card = new CreditCard();
-        cards.add(card);
+        database.insert(card);
         System.out.println("Your card has been created");
         System.out.println("Your card number:");
         System.out.println(card.getCardNumber());
