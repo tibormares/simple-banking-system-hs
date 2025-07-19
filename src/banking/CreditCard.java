@@ -2,7 +2,7 @@ package banking;
 
 public class CreditCard {
     private final String cardNumber;
-    private String pinCode;
+    private final String pinCode;
     private int balance;
 
     public CreditCard() {
@@ -57,6 +57,26 @@ public class CreditCard {
         return cardNumberWithoutChecksum + checksumNumber;
     }
 
+    public static boolean isValidLuhn(String cardNumber) {
+        if (cardNumber == null || cardNumber.length() != 16) {
+            return false;
+        }
+        int sum = 0;
+        boolean alternate = false;
+        for (int i = cardNumber.length() - 1; i >= 0; i--) {
+            int digit = Integer.parseInt(cardNumber.substring(i, i + 1));
+            if (alternate) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit = (digit % 10) + 1;
+                }
+            }
+            sum += digit;
+            alternate = !alternate;
+        }
+        return (sum % 10 == 0);
+    }
+
     private String generatePinCode() {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i <= 4; i++) {
@@ -72,10 +92,6 @@ public class CreditCard {
 
     public String getPinCode() {
         return pinCode;
-    }
-
-    public void newGeneratedPinCode() {
-        pinCode = generatePinCode();
     }
 
     public int getBalance() {

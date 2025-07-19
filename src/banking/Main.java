@@ -1,6 +1,5 @@
 package banking;
 
-import java.sql.SQLException;
 import java.util.Scanner;
 
 public class Main {
@@ -16,8 +15,6 @@ public class Main {
             }
             database = new Database(args[1]);
             menu(scanner);
-        } catch (SQLException e) {
-            System.out.println("Database error: " + e.getMessage());
         }
     }
 
@@ -46,7 +43,8 @@ public class Main {
         System.out.println("Enter your PIN:");
         String inputPinCode = scanner.next();
         System.out.println();
-        CreditCard creditCard = verifyLogin(inputCardNumber, inputPinCode);
+
+        CreditCard creditCard = database.verifyLogin(inputCardNumber, inputPinCode);
         if (creditCard != null) {
             System.out.println("You have successfully logged in!");
             System.out.println();
@@ -61,13 +59,72 @@ public class Main {
         while (true) {
             System.out.println("""
                     1. Balance
-                    2. Log out
+                    2. Add income
+                    3. Do transfer
+                    4. Close account
+                    5. Log out
                     0. Exit""");
             String input = scanner.next();
             System.out.println();
             switch (input) {
-                case "1" -> System.out.println("Balance: " + creditCard.getBalance());
+                case "1" -> {
+                    int currentBalance = database.getBalance(creditCard.getCardNumber());
+                    System.out.println("Balance: " + currentBalance);
+                    creditCard.setBalance(currentBalance);
+                }
                 case "2" -> {
+                    System.out.println("Enter income:");
+                    int income = scanner.nextInt();
+                    database.addIncome(income, creditCard.getCardNumber());
+                    creditCard.setBalance(creditCard.getBalance() + income);
+                    System.out.println("Income was added!");
+                }
+                case "3" -> {
+                    System.out.println("Transfer");
+                    System.out.println("Enter card number:");
+                    String receiversNumber = scanner.next();
+
+                    if (receiversNumber.equals(creditCard.getCardNumber())) {
+                        System.out.println("You can't transfer money to the same account!");
+                        System.out.println();
+                        continue;
+                    }
+
+                    if (!CreditCard.isValidLuhn(receiversNumber)) {
+                        System.out.println("Probably you made a mistake in the card number. Please try again!");
+                        System.out.println();
+                        continue;
+                    }
+
+                    if (!database.checkAccountNumber(receiversNumber)) {
+                        System.out.println("Such a card does not exist.");
+                        System.out.println();
+                        continue;
+                    }
+
+                    System.out.println("Enter how much money you want to transfer:");
+                    int amount = scanner.nextInt();
+
+                    if (creditCard.getBalance() < amount) {
+                        System.out.println("Not enough money!");
+                        System.out.println();
+                        continue;
+                    }
+
+                    if (database.transferMoney(creditCard.getCardNumber(), receiversNumber, amount)) {
+                        System.out.println("Success!");
+                        creditCard.setBalance(creditCard.getBalance() - amount);
+                    } else {
+                        System.out.println("Transfer failed. Please try again.");
+                    }
+                }
+                case "4" -> {
+                    database.delete(creditCard.getCardNumber());
+                    System.out.println("The account has been closed!");
+                    System.out.println();
+                    return;
+                }
+                case "5" -> {
                     System.out.println("You have successfully logged out!");
                     System.out.println();
                     return;
@@ -79,10 +136,6 @@ public class Main {
             }
             System.out.println();
         }
-    }
-
-    public static CreditCard verifyLogin(String cardNumber, String pinCode) {
-        return database.verifyLogin(cardNumber, pinCode);
     }
 
     public static void createCreditCard() {
